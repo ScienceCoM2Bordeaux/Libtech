@@ -905,14 +905,21 @@
 
         let list = rows.filter(matchRow);
         if (q.length >= 2) {
-            list = list.filter(r =>
-                Object.entries(r).some(([key, value]) =>
-                    headers.includes(key) &&
-                    !descriptionHeaders.has(key) &&
-                    !SEARCH_EXCLUDED.test(key) &&
-                    norm(value).includes(q)
-                )
-            );
+            const words = q.split(/\s+/);   // « enfant dys » devient ['enfant', 'dys']
+            list = list.filter((r) => {
+                // Texte de toutes les colonnes cherchées, sans accents ni majuscules
+                const haystack = norm(
+                    Object.entries(r)
+                        .filter(([key]) =>
+                            headers.includes(key) &&
+                            !descriptionHeaders.has(key) &&
+                            !SEARCH_EXCLUDED.test(key)
+                        )
+                        .map(([, value]) => value)
+                        .join(' ')
+                );
+                return words.every((w) => haystack.includes(w));   // chaque mot doit être présent
+            });
         }
 
 
